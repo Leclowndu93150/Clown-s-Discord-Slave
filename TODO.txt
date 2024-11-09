@@ -1,9 +1,8 @@
-Tags (like levreret)
-Remindme command
-youtube downloader
-tiktok downloader
-reddit downloader
-instagram downloader
+Remindme command - DONE
+YouTube downloader - DONE
+tiktok downloader - FUCK TIKTOK
+reddit downloader - DONE
+instagram downloader - NO
 fun commands like jokes, quotes, facts, etc
 music bot commands
-JS eval command and apply the patch https://github.com/Marven11/CVE-2024-28397-js2py-Sandbox-Escape/blob/main/fix.py
+JS eval command - DONE
