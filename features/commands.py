@@ -1,10 +1,11 @@
+import subprocess
+
 import discord
 from discord.ext import commands, tasks
 from features.downloader import download_youtube_video, download_reddit_video
 from utils.pythoneval import PythonREPL
 from utils.uploader import upload_to_temp
 from features.reminder import ReminderSystem
-import js2py
 import os
 
 
@@ -16,7 +17,7 @@ class Commands(commands.Cog):
         if not self.check_reminders.is_running():
             self.check_reminders.start()
 
-    @commands.command(name="download_youtube", help="Download a YouTube video or short")
+    @commands.command(name="download_youtube", help="Download a YouTube video or short", catalogue="Downloader")
     async def download_youtube(self, ctx: commands.Context, url: str):
         await ctx.defer()
         try:
@@ -41,7 +42,7 @@ class Commands(commands.Cog):
             if 'file_path' in locals() and os.path.exists(file_path):
                 os.remove(file_path)
 
-    @commands.command(name="download_reddit", help="Download a Reddit video")
+    @commands.command(name="download_reddit", help="Download a Reddit video", catalogue="Downloader")
     async def download_reddit(self, ctx: commands.Context, url: str):
         await ctx.defer()
         try:
@@ -66,7 +67,8 @@ class Commands(commands.Cog):
             if 'file_path' in locals() and os.path.exists(file_path):
                 os.remove(file_path)
 
-    @commands.command(name='remindme', help='Set a reminder, e.g. !remindme 1d 2h 3m 4s Some reminder text')
+    @commands.command(name='remindme', help='Set a reminder, e.g. !remindme 1d 2h 3m 4s Some reminder text',
+                      catalogue="Misc")
     async def remind_me(self, ctx: commands.Context, *, reminder_text: str):
         parts = reminder_text.split(maxsplit=1)
         if len(parts) < 2:
@@ -81,16 +83,16 @@ class Commands(commands.Cog):
         else:
             await ctx.send(response)
 
-    @commands.command(name="ping", help="Check the bot's latency")
+    @commands.command(name="ping", help="Check the bot's latency", catalogue="Misc")
     async def ping(self, ctx: commands.Context):
         await ctx.send(f"🏓 Pong! Latency: {round(self.bot.latency * 1000)}ms")
 
-    @commands.command(name="invite", help="Get the invite link for the bot")
+    @commands.command(name="invite", help="Get the invite link for the bot", catalogue="Misc")
     async def invite(self, ctx: commands.Context):
         await ctx.send(
             "🔗 Invite me to your server: https://discord.com/oauth2/authorize?client_id=1129457269642362900")
 
-    @commands.command(name="commands", help="Get a list of all available commands")
+    @commands.command(name="commands", help="Get a list of all available commands", catalogue="Help")
     async def help(self, ctx: commands.Context):
         embed = discord.Embed(title="Commands", description="List of all available commands", color=0xe342f5)
         for command in self.bot.commands:
@@ -112,7 +114,7 @@ class Commands(commands.Cog):
             except Exception as e:
                 print(f"Error sending reminder: {e}")
 
-    @commands.command(name="py", help="Execute Python code")
+    @commands.command(name="py", help="Execute Python code", aliases=["python"], catalogue="Python")
     async def python(self, ctx: commands.Context, *, code: str):
 
         code = code.strip('` \n')
@@ -138,7 +140,7 @@ class Commands(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
 
-    @commands.command(name="pyvars", help="Show your stored variables")
+    @commands.command(name="pyvars", help="Show your stored variables", catalogue="Python")
     async def show_vars(self, ctx: commands.Context):
         user_vars = self.repl.get_user_vars(str(ctx.author.id))
         if not user_vars:
@@ -150,21 +152,12 @@ class Commands(commands.Cog):
 
         await ctx.send(f"```python\n{result}```")
 
-    @commands.command(name="pyclear", help="Clear your stored variables")
+    @commands.command(name="pyclear", help="Clear your stored variables", catalogue="Python")
     async def clear_vars(self, ctx: commands.Context):
         self.repl.user_vars[str(ctx.author.id)] = {}
         await ctx.send("Variables cleared")
 
-
-    @commands.command(name="eval", help="Evaluate a JavaScript expression")
-    async def eval_js(self, ctx: commands.Context, *, expression: str):
-        try:
-            result = js2py.eval_js(expression)
-            await ctx.send(f"```js\n{result}```")
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-
-    @commands.command(name="iamlucky")
+    @commands.command(name="iamlucky", catalogue="Fun")
     async def iamlucky(self, ctx: commands.Context):
         path = os.path.join(os.path.dirname(__file__), "..", "scripts", "iamlucky.js")
         try:

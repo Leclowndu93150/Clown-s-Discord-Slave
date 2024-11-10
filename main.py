@@ -3,6 +3,8 @@ import dotenv
 import os
 from discord.ext import commands
 from features.commands import Commands
+from features.musicplayer import MusicPlayer
+from utils.javascripteval import JavaScriptEval
 
 dotenv.load_dotenv()
 intents = discord.Intents.all()
@@ -14,6 +16,8 @@ client = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f'Bot is ready: {client.user}')
     await client.add_cog(Commands(client))
+    await client.add_cog(MusicPlayer(client))
+    await client.add_cog(JavaScriptEval(client))
     await client.change_presence(status=discord.Status.dnd)
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!commands"))
 
