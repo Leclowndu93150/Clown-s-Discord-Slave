@@ -1,19 +1,16 @@
-import subprocess
-
 import discord
 from discord.ext import commands, tasks
 from features.downloader import download_youtube_video, download_reddit_video
-from utils.pythoneval import SecurePythonSandbox
 from utils.uploader import upload_to_temp
 from features.reminder import ReminderSystem
 import os
+import js2py
 
 
 class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.reminder_system = ReminderSystem()
-        self.sandbox = SecurePythonSandbox()
         if not self.check_reminders.is_running():
             self.check_reminders.start()
 
@@ -113,48 +110,6 @@ class Commands(commands.Cog):
                     )
             except Exception as e:
                 print(f"Error sending reminder: {e}")
-
-    @commands.command(name="py", help="Execute Python code", aliases=["python"], catalogue="Python")
-    async def python(self, ctx: commands.Context, *, code: str):
-        code = code.strip('` \n')
-        if code.startswith('python\n'):
-            code = code[7:]
-
-        if len(code) > 1000:
-            await ctx.send("❌ Code too long (max 1000 characters)")
-            return
-
-        try:
-            result = self.sandbox.execute_with_timeout(code, str(ctx.author.id))
-
-            if result:
-                result_str = str(result)
-                while result_str:
-                    chunk = result_str[:1990]
-                    result_str = result_str[1990:]
-                    await ctx.send(f"```python\n{chunk}```")
-            else:
-                await ctx.send("```python\nNone```")
-
-        except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
-
-    @commands.command(name="pyvars", help="Show your stored variables", catalogue="Python")
-    async def show_vars(self, ctx: commands.Context):
-        user_vars = self.sandbox.get_user_vars(str(ctx.author.id))
-        if not user_vars:
-            await ctx.send("No variables stored")
-            return
-
-        var_list = [f"{name} = {repr(value)}" for name, value in user_vars.items()]
-        result = "\n".join(var_list)
-
-        await ctx.send(f"```python\n{result}```")
-
-    @commands.command(name="pyclear", help="Clear your stored variables", catalogue="Python")
-    async def clear_vars(self, ctx: commands.Context):
-        self.sandbox.reset_user(str(ctx.author.id))
-        await ctx.send("Variables cleared")
 
     @commands.command(name="iamlucky", catalogue="Fun")
     async def iamlucky(self, ctx: commands.Context):
