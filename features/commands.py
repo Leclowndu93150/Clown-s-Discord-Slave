@@ -3,7 +3,7 @@ import subprocess
 import discord
 from discord.ext import commands, tasks
 from features.downloader import download_youtube_video, download_reddit_video
-from utils.pythoneval import PythonREPL
+from utils.pythoneval import SecurePythonSandbox
 from utils.uploader import upload_to_temp
 from features.reminder import ReminderSystem
 import os
@@ -13,7 +13,7 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.reminder_system = ReminderSystem()
-        self.repl = PythonREPL()
+        self.sandbox = SecurePythonSandbox()
         if not self.check_reminders.is_running():
             self.check_reminders.start()
 
@@ -116,7 +116,6 @@ class Commands(commands.Cog):
 
     @commands.command(name="py", help="Execute Python code", aliases=["python"], catalogue="Python")
     async def python(self, ctx: commands.Context, *, code: str):
-
         code = code.strip('` \n')
         if code.startswith('python\n'):
             code = code[7:]
@@ -126,7 +125,7 @@ class Commands(commands.Cog):
             return
 
         try:
-            result = self.repl.execute(code, str(ctx.author.id))
+            result = self.sandbox.execute_with_timeout(code, str(ctx.author.id))
 
             if result:
                 result_str = str(result)
@@ -142,7 +141,7 @@ class Commands(commands.Cog):
 
     @commands.command(name="pyvars", help="Show your stored variables", catalogue="Python")
     async def show_vars(self, ctx: commands.Context):
-        user_vars = self.repl.get_user_vars(str(ctx.author.id))
+        user_vars = self.sandbox.get_user_vars(str(ctx.author.id))
         if not user_vars:
             await ctx.send("No variables stored")
             return
@@ -154,7 +153,7 @@ class Commands(commands.Cog):
 
     @commands.command(name="pyclear", help="Clear your stored variables", catalogue="Python")
     async def clear_vars(self, ctx: commands.Context):
-        self.repl.user_vars[str(ctx.author.id)] = {}
+        self.sandbox.reset_user(str(ctx.author.id))
         await ctx.send("Variables cleared")
 
     @commands.command(name="iamlucky", catalogue="Fun")
