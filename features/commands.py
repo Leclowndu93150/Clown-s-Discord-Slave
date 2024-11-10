@@ -4,7 +4,6 @@ from features.downloader import download_youtube_video, download_reddit_video
 from utils.uploader import upload_to_temp
 from features.reminder import ReminderSystem
 import os
-import js2py
 
 
 class Commands(commands.Cog):
@@ -110,16 +109,6 @@ class Commands(commands.Cog):
                     )
             except Exception as e:
                 print(f"Error sending reminder: {e}")
-
-    @commands.command(name="iamlucky", catalogue="Fun")
-    async def iamlucky(self, ctx: commands.Context):
-        path = os.path.join(os.path.dirname(__file__), "..", "scripts", "iamlucky.js")
-        try:
-            with open(path, "r", encoding="utf-8") as file:
-                js_content = file.read()
-            await ctx.send(js2py.eval_js(js_content))
-        except FileNotFoundError:
-            await ctx.send("The JS file was not found!")
 
     @commands.command(name="shutdown", help="Shut down the bot", catalogue="Admin")
     async def shutdown(self, ctx: commands.Context):

@@ -1,64 +1,27 @@
-import os
-import subprocess
 import json
+import os
+import io
+
 from discord.ext import commands
+import discord
+import STPyV8
+
 
 class JavaScriptEval(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.scripts_dir = os.path.join(os.path.dirname(__file__), "..", "scripts")
-        os.makedirs(self.scripts_dir, exist_ok=True)
-
-        self.js_path = os.path.join(self.scripts_dir, "eval_js.js")
-        if not os.path.exists(self.js_path):
-            self._create_js_file()
-
-    def _create_js_file(self):
-        js_code = '''
-const ivm = require('isolated-vm');
-
-async function run() {
-    // Create a new isolate with a memory limit
-    const isolate = new ivm.Isolate({ memoryLimit: 128 });
-    const context = await isolate.createContext();
-
-    // Set up a secure jail
-    const jail = context.global;
-    await jail.set('global', jail.derefInto());
-
-    // Create a safe console that only allows log
-    const safeConsole = {
-        log: (...args) => console.log(...args)
-    };
-    await jail.set('console', new ivm.Reference(safeConsole));
-
-    const code = process.argv[2];
-    try {
-        // Run the code with a timeout
-        const result = await context.eval(code, { timeout: 1000 });
-        console.log(JSON.stringify(result));
-    } catch (e) {
-        console.error(JSON.stringify({ error: e.message }));
-        process.exit(1);
-    }
-}
-
-run();
-'''
-        with open(self.js_path, 'w') as f:
-            f.write(js_code)
 
     @commands.command(
         name="eval",
-        help="Evaluate a JavaScript expression safely in an isolated environment",
+        help="Evaluate a JavaScript expression safely",
         aliases=["js", "javascript"],
         brief="Run JavaScript code"
     )
     @commands.cooldown(1, 1, commands.BucketType.user)
     async def eval_js(self, ctx: commands.Context, *, expression: str):
         """
-        Evaluates JavaScript code in a secure sandbox environment.
-        The code is run with limited memory and execution time.
+        Evaluates JavaScript code in a sandboxed environment using STPyV8.
+        If the result is a file dictionary, sends it as a file attachment.
         """
         # Remove code block formatting if present
         expression = expression.strip('`')
@@ -66,39 +29,56 @@ run();
             expression = expression[3:]
 
         try:
-            # Run the JavaScript code in the isolated environment
-            process = subprocess.Popen(
-                ['node', self.js_path, expression],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
+            with STPyV8.JSContext() as ctxt:
+                # Add safe built-ins to context
+                ctxt.eval("const console = { log: function(msg) { return msg; } };")
 
-            # Set a timeout of 5 seconds for the entire process
-            try:
-                stdout, stderr = process.communicate(timeout=5)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                await ctx.send("❌ Execution timed out (5 seconds)")
-                return
+                # Convert the result to a JSON string in JavaScript
+                result_js = ctxt.eval(f"JSON.stringify({expression})")
 
-            if stderr:
-                # Try to parse error message from JSON
-                try:
-                    error_data = json.loads(stderr)
-                    error_message = error_data.get('error', stderr)
-                except json.JSONDecodeError:
-                    error_message = stderr
+                # Parse the JSON string back to Python
+                result = json.loads(result_js)
 
-                await ctx.send(f"❌ Error: {error_message}")
-            else:
-                # Try to parse the result
-                try:
-                    result = json.loads(stdout)
-                    formatted_result = json.dumps(result, indent=2)
-                    await ctx.send(f"```js\n{formatted_result}```")
-                except json.JSONDecodeError:
-                    await ctx.send(f"```js\n{stdout}```")
+                # Handle file output if it matches the structure
+                if isinstance(result, dict) and 'file' in result and isinstance(result['file'], dict):
+                    file_info = result['file']
+                    if 'name' in file_info and 'data' in file_info:
+                        file_name = file_info['name']
+                        file_data = file_info['data']
+
+                        # Prepare the file data for Discord
+                        buffer = io.BytesIO(file_data.encode('utf-8'))
+                        buffer.seek(0)
+                        await ctx.send(file=discord.File(buffer, filename=file_name))
+                        return
+
+                # Handle regular output
+                formatted_result = json.dumps(result, indent=2) if isinstance(result, (dict, list)) else str(result)
+                if formatted_result:
+                    if len(formatted_result) > 1990:
+                        parts = [formatted_result[i:i+1990] for i in range(0, len(formatted_result), 1990)]
+                        for part in parts:
+                            await ctx.send(f"```js\n{part}```")
+                    else:
+                        await ctx.send(f"```js\n{formatted_result}```")
 
         except Exception as e:
             await ctx.send(f"❌ Error: {str(e)}")
+
+        finally:
+            ctxt = None  # Clean up context
+
+    @commands.command(name="iamlucky", catalogue="Javascript")
+    @commands.cooldown(1, 1, commands.BucketType.user)
+    async def iamlucky(self, ctx: commands.Context):
+        path = os.path.join(os.path.dirname(__file__), "..", "scripts", "iamlucky.js")
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                js_content = file.read()
+
+            with STPyV8.JSContext() as ctxt:
+                ctxt.eval(js_content)
+                result = ctxt.eval("result")
+                await ctx.send(f"```js\n{result}```")
+        except FileNotFoundError:
+            await ctx.send("The JS file was not found!")

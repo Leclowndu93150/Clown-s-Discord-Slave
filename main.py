@@ -5,7 +5,6 @@ from discord.ext import commands
 from features.commands import Commands
 from features.musicplayer import MusicPlayer
 from features.javascripteval import JavaScriptEval
-from features.pythoneval import PythonCommands
 
 dotenv.load_dotenv()
 intents = discord.Intents.all()
@@ -19,7 +18,6 @@ async def on_ready():
     await client.add_cog(Commands(client))
     await client.add_cog(MusicPlayer(client))
     await client.add_cog(JavaScriptEval(client))
-    await client.add_cog(PythonCommands(client, os.getenv('PYPY_PATH')))
     await client.change_presence(status=discord.Status.dnd)
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!commands"))
 
