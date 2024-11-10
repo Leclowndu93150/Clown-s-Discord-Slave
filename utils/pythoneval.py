@@ -65,7 +65,7 @@ class SecurePythonSandbox:
             '__setattr__', '__delattr__', '__weakref__', '__init__',
             '__new__', '__del__', '__get__', '__set__', '__delete__',
             '__slots__', '__metaclass__', '__subclasshook__', '__instancecheck__',
-            'breakpoint', 'credits', 'copyright', 'help', 'license', 'exit', 'quit'
+            'breakpoint', 'credits', 'copyright', 'help', 'license', 'exit', 'quit', 'while'
         }
 
         self.timeout_seconds = 3
@@ -117,15 +117,30 @@ class SecurePythonSandbox:
 
     def check_ast_node(self, node: ast.AST, depth: int = 0) -> bool:
         """Thoroughly check if an AST node is safe to execute."""
+
+        if isinstance(node, (ast.Assign, ast.AugAssign)):
+            for target in node.targets if isinstance(node, ast.Assign) else [node.target]:
+                if isinstance(target, ast.Name) and target.id in self.blacklist:
+                    return False
+
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    if isinstance(node.value, ast.Name) and node.value.id in self.blacklist:
+                        return False
+                    if isinstance(node.value, ast.Call) and getattr(node.value.func, 'id', '') in self.blacklist:
+                        return False
+
+
+
         if depth > self.max_recursion_depth:
             raise SecurityViolation("AST recursion depth exceeded")
 
-        # Blacklist of unsafe node types
         unsafe_nodes = {
             ast.Delete, ast.Import, ast.ImportFrom, ast.Global,
             ast.Nonlocal, ast.AsyncFunctionDef, ast.AsyncFor,
             ast.AsyncWith, ast.Await, ast.Yield, ast.YieldFrom,
-            ast.ClassDef, ast.Lambda
+            ast.ClassDef, ast.Lambda, ast.While
         }
 
         if any(isinstance(node, node_type) for node_type in unsafe_nodes):

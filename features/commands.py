@@ -166,5 +166,13 @@ class Commands(commands.Cog):
         except FileNotFoundError:
             await ctx.send("The JS file was not found!")
 
+    @commands.command(name="shutdown", help="Shut down the bot", catalogue="Admin")
+    async def shutdown(self, ctx: commands.Context):
+        if ctx.author.id == 363664620583518210:
+            await ctx.send("Shutting down...")
+            await self.bot.close()
+        else:
+            await ctx.send("You don't have permission to do that!")
+
     def cog_unload(self):
         self.check_reminders.cancel()
