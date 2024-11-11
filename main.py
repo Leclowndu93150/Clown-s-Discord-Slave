@@ -2,6 +2,8 @@ import discord
 import dotenv
 import os
 from discord.ext import commands
+
+from features.admin import Admin
 from features.commands import Commands
 from features.musicplayer import MusicPlayer
 from features.javascripteval import JavaScriptEval
@@ -18,12 +20,13 @@ client = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f'Bot is ready: {client.user}')
     await client.add_cog(NSFW(client))
+    await client.add_cog(Admin(client))
     await client.add_cog(Commands(client))
     await client.add_cog(MusicPlayer(client))
     await client.add_cog(SocialMedia(client))
     await client.add_cog(JavaScriptEval(client))
     await client.change_presence(status=discord.Status.dnd)
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!commands"))
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
 
 
 @client.event

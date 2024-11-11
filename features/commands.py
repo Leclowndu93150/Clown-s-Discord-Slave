@@ -88,13 +88,6 @@ class Commands(commands.Cog):
         await ctx.send(
             "🔗 Invite me to your server: https://discord.com/oauth2/authorize?client_id=1129457269642362900")
 
-    @commands.command(name="commands", help="Get a list of all available commands", catalogue="Help")
-    async def help(self, ctx: commands.Context):
-        embed = discord.Embed(title="Commands", description="List of all available commands", color=0xe342f5)
-        for command in self.bot.commands:
-            embed.add_field(name=command.name, value=command.help, inline=False)
-        await ctx.send(embed=embed)
-
     @tasks.loop(seconds=30)
     async def check_reminders(self):
         for reminder in self.reminder_system.check_reminders():
@@ -109,14 +102,6 @@ class Commands(commands.Cog):
                     )
             except Exception as e:
                 print(f"Error sending reminder: {e}")
-
-    @commands.command(name="shutdown", help="Shut down the bot", catalogue="Admin")
-    async def shutdown(self, ctx: commands.Context):
-        if ctx.author.id == 363664620583518210:
-            await ctx.send("Shutting down...")
-            await self.bot.close()
-        else:
-            await ctx.send("You don't have permission to do that!")
 
     def cog_unload(self):
         self.check_reminders.cancel()

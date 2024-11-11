@@ -12,7 +12,7 @@ class MusicPlayer(commands.Cog):
         self.voice_client = None
         self.queue = []
         self.now_playing = None
-        self.volume = 0.5
+        self.volume = 1.0
         self.loop = False
         self.paused = False
 
@@ -65,7 +65,6 @@ class MusicPlayer(commands.Cog):
 
     async def play_next(self, ctx: commands.Context):
         if not self.queue:
-            await ctx.send("🔚 Queue is empty")
             return
 
         try:
@@ -134,7 +133,11 @@ class MusicPlayer(commands.Cog):
             queue_list = "\n".join(f"{idx + 1}. {song}" for idx, song in enumerate(self.queue))
             await ctx.send(f"🎶 Current Queue:\n{queue_list}")
 
-    @commands.command(name="volume", help="Set the volume (0-100)", catalogue="Music")
+    @commands.command(name="volume", help="Show the current volume", catalogue="Music")
+    async def show_volume(self, ctx: commands.Context):
+        await ctx.send(f"🔊 Volume is currently set to {int(self.volume * 100)}%")
+
+    @commands.command(name="setvolume", help="Set the volume (0-100)", catalogue="Music")
     async def set_volume(self, ctx: commands.Context, volume: int):
         if 0 <= volume <= 100:
             self.volume = volume / 100.0
