@@ -1,23 +1,24 @@
+import asyncio
 import os
 import re
-
 import discord
+from redvid import Downloader
 import ffmpeg
 from discord.ext import commands
-from pytube import YouTube
-from redvid import Downloader
-import asyncio
-from utils.exception_handler import DownloadError
+from pytube import YouTube, Search
 
 
-async def download_youtube_audio(url: str, ctx: commands.Context) -> str:
+async def download_youtube_audio(input_str: str, ctx: commands.Context) -> str:
     youtube_regex = (r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:['
                      r'\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$')
 
-    if not re.match(youtube_regex, url):
-        await ctx.send("❌ Invalid YouTube URL provided!")
-        raise DownloadError("Invalid YouTube URL")
+    if re.match(youtube_regex, input_str):
+        return await _download_youtube_audio(input_str, ctx)
+    else:
+        return await _search_and_download_youtube_audio(input_str, ctx)
 
+
+async def _download_youtube_audio(url: str, ctx: commands.Context) -> str:
     output_path = "music/songs"
     temp_path = os.path.join(output_path, "temp")
     os.makedirs(output_path, exist_ok=True)
@@ -41,7 +42,6 @@ async def download_youtube_audio(url: str, ctx: commands.Context) -> str:
 
         if not audio_stream:
             await ctx.send("❌ No suitable audio stream found!")
-            raise DownloadError("No suitable audio stream found")
 
         sent_messages.append(await ctx.send(f"🔊 Downloading audio ({audio_stream.abr})..."))
 
@@ -81,18 +81,13 @@ async def download_youtube_audio(url: str, ctx: commands.Context) -> str:
 
             except ffmpeg.Error as e:
                 await ctx.send("❌ Error converting to MP3!")
-                raise DownloadError(f"FFmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}")
 
     except asyncio.TimeoutError:
         error_message = "❌ Operation timed out. Please try again with a shorter video."
         await ctx.send(error_message)
-        raise DownloadError(error_message)
 
     except Exception as e:
-        error_message = f"❌ An unexpected error occurred: {str(e)}"
-        print(error_message)
-        await ctx.send(error_message)
-        raise DownloadError(error_message)
+        await ctx.send(str(e))
 
     finally:
         if temp_audio_path and os.path.exists(temp_audio_path):
@@ -107,13 +102,58 @@ async def download_youtube_audio(url: str, ctx: commands.Context) -> str:
         except Exception as e:
             print(f"Failed to remove temp directory: {e}")
 
+
+async def _search_and_download_youtube_audio(search_term: str, ctx: commands.Context) -> str:
+    output_path = "music/songs"
+    temp_path = os.path.join(output_path, "temp")
+    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(temp_path, exist_ok=True)
+
+    sent_messages = []
+
+    try:
+        search = Search(search_term)
+        search_results = await asyncio.to_thread(lambda: list(search.results)[:5])
+
+        if not search_results:
+            # If no results found, try searching for the full search term
+            full_search_term = " ".join(search_term.split())
+            search = Search(full_search_term)
+            search_results = await asyncio.to_thread(lambda: list(search.results)[:5])
+
+            if not search_results:
+                await ctx.send("❌ No results found for the query.")
+
+        # Prompt user for choice
+        search_msg = "\n".join(f"{i + 1}. {video.title} ({video.length // 60}:{video.length % 60})" for i, video in
+                               enumerate(search_results))
+        selection_msg = await ctx.send(f"🔍 Search results:\n{search_msg}\nType a number (1-5) to select a video.")
+
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel and m.content.isdigit() and 1 <= int(
+                m.content) <= 5
+
+        try:
+            response = await ctx.bot.wait_for("message", check=check, timeout=30.0)
+            choice = int(response.content) - 1
+            selected_url = search_results[choice].watch_url
+            await selection_msg.delete()
+            await response.delete()
+        except asyncio.TimeoutError:
+            await ctx.send("❌ Selection timed out.")
+
+        return await _download_youtube_audio(selected_url, ctx)
+
+    except Exception as e:
+        await ctx.send(str(e))
+
+
 async def download_youtube_video(url: str, ctx: discord.ext.commands.Context) -> str:
     youtube_regex = (r'^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/(?:['
                      r'\w\-]+\?v=|embed\/|live\/|v\/)?)([\w\-]+)(\S+)?$')
 
     if not re.match(youtube_regex, url):
         await ctx.send("❌ Invalid YouTube URL provided!")
-        raise DownloadError("Invalid YouTube URL")
 
     try:
         output_path = "downloads/youtube"
@@ -140,7 +180,6 @@ async def download_youtube_video(url: str, ctx: discord.ext.commands.Context) ->
 
         if not video_stream or not audio_stream:
             await ctx.send("❌ No suitable streams found!")
-            raise DownloadError("No suitable streams found")
 
         sent_messages.append(await ctx.send(f"🎥 Downloading video ({video_stream.resolution})..."))
         video_path = video_stream.download(temp_path, filename_prefix="video_")
@@ -177,13 +216,9 @@ async def download_youtube_video(url: str, ctx: discord.ext.commands.Context) ->
 
         except ffmpeg.Error as e:
             await ctx.send("❌ Error merging video and audio!")
-            raise DownloadError(f"FFmpeg error: {e.stderr.decode() if hasattr(e, 'stderr') else str(e)}")
 
     except Exception as e:
-        error_message = f"❌ An unexpected error occurred: {str(e)}"
-        print(error_message)
-        await ctx.send(error_message)
-        raise DownloadError(error_message)
+        await ctx.send(str(e))
 
 
 async def download_reddit_video(url: str, ctx: discord.ext.commands.Context) -> str:
@@ -193,7 +228,6 @@ async def download_reddit_video(url: str, ctx: discord.ext.commands.Context) -> 
 
     if not re.match(reddit_regex, url):
         await ctx.send("❌ Invalid Reddit URL provided!")
-        raise DownloadError("Invalid Reddit URL")
 
     try:
         output_path = "downloads/reddit"

@@ -4,6 +4,7 @@ from discord.ext import commands
 import os
 import asyncio
 
+
 class MusicPlayer(commands.Cog):
 
     def __init__(self, bot):
@@ -36,8 +37,8 @@ class MusicPlayer(commands.Cog):
         self.queue.clear()  # Clear the queue when leaving
         await ctx.send("🔇 Left the voice channel")
 
-    @commands.command(name="play", help="Play a song from a YouTube URL", catalogue="Music")
-    async def play(self, ctx: commands.Context, url: str):
+    @commands.command(name="play", help="Play a song from a YouTube search", catalogue="Music")
+    async def play(self, ctx: commands.Context, *search_terms: str):
         if not ctx.author.voice:
             return await ctx.send("❌ You must be in a voice channel!")
 
@@ -48,7 +49,8 @@ class MusicPlayer(commands.Cog):
                 return await ctx.send(f"❌ Failed to connect: {str(e)}")
 
         try:
-            file_path = await downloader.download_youtube_audio(url, ctx)
+            search_term = " ".join(search_terms)
+            file_path = await downloader.download_youtube_audio(search_term, ctx)
             if not file_path or not os.path.exists(file_path):
                 return await ctx.send("❌ Error downloading audio")
 
@@ -59,7 +61,7 @@ class MusicPlayer(commands.Cog):
                 await self.play_next(ctx)
 
         except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
+            await ctx.send(str(e))
 
     async def play_next(self, ctx: commands.Context):
         if not self.queue:
@@ -73,7 +75,6 @@ class MusicPlayer(commands.Cog):
                 await ctx.send("❌ File not found!")
                 return await self.play_next(ctx)
 
-            # Use proper path escaping and FFmpeg options
             audio_source = discord.PCMVolumeTransformer(
                 discord.FFmpegPCMAudio(
                     self.now_playing,
@@ -97,7 +98,7 @@ class MusicPlayer(commands.Cog):
             await ctx.send(f"🎶 Now playing: {os.path.basename(self.now_playing)}")
 
         except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
+            await ctx.send(str(e))
             await self.play_next(ctx)
 
     @commands.command(name="pause", help="Pause the current song", catalogue="Music")

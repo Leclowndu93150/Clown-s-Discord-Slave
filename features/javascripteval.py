@@ -63,7 +63,7 @@ class JavaScriptEval(commands.Cog):
                         await ctx.send(f"```js\n{formatted_result}```")
 
         except Exception as e:
-            await ctx.send(f"❌ Error: {str(e)}")
+            await ctx.send(str(e))
 
         finally:
             ctxt = None  # Clean up context
