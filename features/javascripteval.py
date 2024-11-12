@@ -11,7 +11,7 @@ class JavaScriptEval(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(
+    @commands.hybrid_command(
         name="eval",
         help="Evaluate a JavaScript expression safely",
         aliases=["js", "javascript"],
@@ -68,7 +68,7 @@ class JavaScriptEval(commands.Cog):
         finally:
             ctxt = None  # Clean up context
 
-    @commands.command(name="iamlucky", catalogue="Javascript")
+    @commands.hybrid_command(name="iamlucky", catalogue="Javascript")
     @commands.cooldown(1, 1, commands.BucketType.user)
     async def iamlucky(self, ctx: commands.Context):
         path = os.path.join(os.path.dirname(__file__), "..", "scripts", "iamlucky.js")

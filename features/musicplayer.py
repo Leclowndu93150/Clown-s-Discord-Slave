@@ -38,7 +38,7 @@ class MusicPlayer(commands.Cog):
         await ctx.send("🔇 Left the voice channel")
 
     @commands.command(name="play", help="Play a song from a YouTube search", catalogue="Music")
-    async def play(self, ctx: commands.Context, *search_terms: str):
+    async def play(self, ctx: commands.Context, *query: str):
         if not ctx.author.voice:
             return await ctx.send("❌ You must be in a voice channel!")
 
@@ -49,7 +49,7 @@ class MusicPlayer(commands.Cog):
                 return await ctx.send(f"❌ Failed to connect: {str(e)}")
 
         try:
-            search_term = " ".join(search_terms)
+            search_term = " ".join(query)
             file_path = await downloader.download_youtube_audio(search_term, ctx)
             if not file_path or not os.path.exists(file_path):
                 return await ctx.send("❌ Error downloading audio")

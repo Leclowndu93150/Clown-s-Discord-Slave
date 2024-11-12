@@ -7,7 +7,7 @@ class Admin(commands.Cog):
         self.bot = bot
         self.owner_id = 363664620583518210
 
-    @commands.command(name="shutdown", help="Shut down the bot", catalogue="Admin")
+    @commands.hybrid_command(name="shutdown", help="Shut down the bot", catalogue="Admin")
     async def shutdown(self, ctx: commands.Context):
         if ctx.author.id == self.owner_id:
             await ctx.send("Shutting down...")
@@ -15,7 +15,7 @@ class Admin(commands.Cog):
         else:
             await ctx.send("You don't have permission to do that!")
 
-    @commands.command("setname", help="Set the bot's username", catalogue="Admin")
+    @commands.hybrid_command("setname", help="Set the bot's username", catalogue="Admin")
     async def set_name(self, ctx: commands.Context, *, name: str):
         if ctx.author.id == self.owner_id:
             await self.bot.user.edit(username=name)
@@ -23,7 +23,7 @@ class Admin(commands.Cog):
         else:
             await ctx.send("You don't have permission to do that!")
 
-    @commands.command("setavatar", help="Set the bot's avatar", catalogue="Admin")
+    @commands.hybrid_command("setavatar", help="Set the bot's avatar", catalogue="Admin")
     async def set_avatar(self, ctx: commands.Context, url: str):
         if ctx.author.id == self.owner_id:
             async with self.bot.session.get(url) as response:
@@ -36,7 +36,7 @@ class Admin(commands.Cog):
         else:
             await ctx.send("You don't have permission to do that!")
 
-    @commands.command("setactivity", help="Set the bot's activity", catalogue="Admin")
+    @commands.hybrid_command("setactivity", help="Set the bot's activity", catalogue="Admin")
     async def set_activity(self, ctx: commands.Context, *, activity: str):
         if ctx.author.id == self.owner_id:
             await self.bot.change_presence(
@@ -45,7 +45,7 @@ class Admin(commands.Cog):
         else:
             await ctx.send("You don't have permission to do that!")
 
-    @commands.command("setstatus", help="Set the bot's status", catalogue="Admin")
+    @commands.hybrid_command("setstatus", help="Set the bot's status", catalogue="Admin")
     async def set_status(self, ctx: commands.Context, status: str):
         if ctx.author.id == self.owner_id:
             await self.bot.change_presence(status=discord.Status[status])

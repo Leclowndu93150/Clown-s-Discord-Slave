@@ -13,7 +13,7 @@ class Commands(commands.Cog):
         if not self.check_reminders.is_running():
             self.check_reminders.start()
 
-    @commands.command(name="download_youtube", help="Download a YouTube video or short", catalogue="Downloader")
+    @commands.hybrid_command(name="download_youtube", help="Download a YouTube video or short", catalogue="Downloader")
     async def download_youtube(self, ctx: commands.Context, url: str):
         await ctx.defer()
         try:
@@ -38,7 +38,7 @@ class Commands(commands.Cog):
             if 'file_path' in locals() and os.path.exists(file_path):
                 os.remove(file_path)
 
-    @commands.command(name="download_reddit", help="Download a Reddit video", catalogue="Downloader")
+    @commands.hybrid_command(name="download_reddit", help="Download a Reddit video", catalogue="Downloader")
     async def download_reddit(self, ctx: commands.Context, url: str):
         await ctx.defer()
         try:
@@ -63,7 +63,7 @@ class Commands(commands.Cog):
             if 'file_path' in locals() and os.path.exists(file_path):
                 os.remove(file_path)
 
-    @commands.command(name='remindme', help='Set a reminder, e.g. !remindme 1d 2h 3m 4s Some reminder text',
+    @commands.hybrid_command(name='remindme', help='Set a reminder, e.g. !remindme 1d 2h 3m 4s Some reminder text',
                       catalogue="Misc")
     async def remind_me(self, ctx: commands.Context, *, reminder_text: str):
         parts = reminder_text.split(maxsplit=1)
@@ -79,11 +79,11 @@ class Commands(commands.Cog):
         else:
             await ctx.send(response)
 
-    @commands.command(name="ping", help="Check the bot's latency", catalogue="Misc")
+    @commands.hybrid_command(name="ping", help="Check the bot's latency", catalogue="Misc")
     async def ping(self, ctx: commands.Context):
         await ctx.send(f"🏓 Pong! Latency: {round(self.bot.latency * 1000)}ms")
 
-    @commands.command(name="invite", help="Get the invite link for the bot", catalogue="Misc")
+    @commands.hybrid_command(name="invite", help="Get the invite link for the bot", catalogue="Misc")
     async def invite(self, ctx: commands.Context):
         await ctx.send(
             "🔗 Invite me to your server: https://discord.com/oauth2/authorize?client_id=1129457269642362900")

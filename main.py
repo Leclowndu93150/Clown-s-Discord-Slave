@@ -27,6 +27,7 @@ async def on_ready():
     await client.add_cog(JavaScriptEval(client))
     await client.change_presence(status=discord.Status.dnd)
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="!help"))
+    await client.tree.sync()
 
 
 @client.event

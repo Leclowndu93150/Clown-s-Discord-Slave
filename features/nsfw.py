@@ -8,9 +8,9 @@ import os
 
 class NSFW(commands.Cog):
 
-    @commands.command(name="r34", help="Search for a random image on rule34.xxx", brief="NSFW random search")
+    @commands.hybrid_command(name="r34", help="Search for a random image on rule34.xxx", brief="NSFW random search")
     async def r34(self, ctx: commands.Context, *, tags: str):
-        if not ctx.channel.is_nsfw() and ctx.message.author.id != 363664620583518210:
+        if not ctx.channel.is_private() and ctx.message.author.id != 363664620583518210:
             await ctx.send("🔞 This command can only be used in NSFW channels!")
             return
 
@@ -55,7 +55,7 @@ class NSFW(commands.Cog):
             if os.path.exists(image_name):
                 os.remove(image_name)
 
-    @commands.command(name="r34tags", help="Get a list of popular tags for rule34.xxx", brief="Popular tags list")
+    @commands.hybrid_command(name="r34tags", help="Get a list of popular tags for rule34.xxx", brief="Popular tags list")
     async def r34_tags(self, ctx: commands.Context):
         if ctx.channel.is_nsfw() or ctx.message.author.id == 363664620583518210:
             await ctx.send("Popular tags: https://rule34.xxx/index.php?page=tags&s=list")
@@ -63,7 +63,7 @@ class NSFW(commands.Cog):
             await ctx.send("🔞 This command can only be used in NSFW channels!")
 
 
-    @commands.command(name="e621", help="Search for a random image on e621.net", brief="Purrrrfectly safe search")
+    @commands.hybrid_command(name="e621", help="Search for a random image on e621.net", brief="Purrrrfectly safe search")
     async def e621(self, ctx: commands.Context, *, tags: str):
         if not ctx.channel.is_nsfw() and ctx.message.author.id != 363664620583518210:
             await ctx.send("🔞 This command can only be used in NSFW channels!")
@@ -109,7 +109,7 @@ class NSFW(commands.Cog):
             if os.path.exists(image_name):
                 os.remove(image_name)
 
-    @commands.command(name="e621tags", help="Get a list of popular tags for e621.net", brief="Popular tags list")
+    @commands.hybrid_command(name="e621tags", help="Get a list of popular tags for e621.net", brief="Popular tags list")
     async def e621_tags(self, ctx: commands.Context):
         if ctx.channel.is_nsfw() or ctx.message.author.id == 363664620583518210:
             await ctx.send("Popular tags: https://e621.net/tags")
