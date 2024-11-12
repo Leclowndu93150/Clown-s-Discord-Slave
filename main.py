@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from features.admin import Admin
 from features.commands import Commands
+from features.fun import Fun
 from features.musicplayer import MusicPlayer
 from features.javascripteval import JavaScriptEval
 from features.nsfw import NSFW
@@ -19,6 +20,7 @@ client = commands.Bot(command_prefix="!", intents=intents)
 @client.event
 async def on_ready():
     print(f'Bot is ready: {client.user}')
+    await client.add_cog(Fun(client))
     await client.add_cog(NSFW(client))
     await client.add_cog(Admin(client))
     await client.add_cog(Commands(client))
