@@ -45,3 +45,5 @@ class Fun(commands.Cog):
                     embed.set_image(url=data["message"])
                     await ctx.send(embed=embed)
 
+
+

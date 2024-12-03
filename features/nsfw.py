@@ -10,7 +10,7 @@ class NSFW(commands.Cog):
 
     @commands.hybrid_command(name="r34", help="Search for a random image on rule34.xxx", brief="NSFW random search")
     async def r34(self, ctx: commands.Context, *, tags: str):
-        if not ctx.channel.is_private() and ctx.message.author.id != 363664620583518210:
+        if not ctx.channel.is_nsfw() and ctx.message.author.id != 363664620583518210:
             await ctx.send("🔞 This command can only be used in NSFW channels!")
             return
 
