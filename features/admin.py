@@ -52,3 +52,30 @@ class Admin(commands.Cog):
             await ctx.send(f"Status set to {status}")
         else:
             await ctx.send("You don't have permission to do that!")
+
+    #Command that mutes everyone in the voice channel
+    @commands.hybrid_command("muteall", help="Mute everyone in the voice channel", catalogue="Admin")
+    async def mute_all(self, ctx: commands.Context):
+        if ctx.author.id == self.owner_id or ctx.author.id == 567375786718265378:
+            if ctx.author.voice:
+                for member in ctx.author.voice.channel.members:
+                    await member.edit(mute=True)
+                await ctx.send("Everyone muted!")
+            else:
+                await ctx.send("You need to be in a voice channel to use this command!")
+        else:
+            await ctx.send("You don't have permission to do that!")
+
+    #Command that unmutes everyone in the voice channel
+    @commands.hybrid_command("unmuteall", help="Unmute everyone in the voice channel", catalogue="Admin")
+    async def unmute_all(self, ctx: commands.Context):
+        if ctx.author.id == self.owner_id or ctx.author.id == 567375786718265378:
+            if ctx.author.voice:
+                for member in ctx.author.voice.channel.members:
+                    await member.edit(mute=False)
+                await ctx.send("Everyone unmuted!")
+            else:
+                await ctx.send("You need to be in a voice channel to use this command!")
+        else:
+            await ctx.send("You don't have permission to do that!")
+
